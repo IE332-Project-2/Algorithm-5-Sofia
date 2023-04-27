@@ -1,0 +1,73 @@
+# Install libraries
+install.packages("imager")
+install.packages("OpenImageR")
+install.packages("magick")
+library(OpenImageR)
+library(magick)
+library(imager)
+library(jpeg)
+
+setwd("/Users/sofiavonderhaar/Desktop/P2_332/data-for-332/data-for-332/dandelions")
+getwd()
+
+img <- load.image("/Users/sofiavonderhaar/Desktop/P2_332/data-for-332/data-for-332/dandelions/th-510810430.jpg")
+plot(img)
+
+dim(img)
+width <- dim(img)[1]
+height <- dim(img)[2]
+plot(img)
+middle = width / 3
+
+img_grad = imgradient(img, "x")
+max_grad = where(img_grad == max(img_grad))$x[1]
+
+img_grad2 = imgradient(img, "y")
+max_grad2 = where(img_grad == max(img_grad))$y[1]
+
+
+
+P = 0.1
+
+pixels = width * height
+total_pixels = P * pixels # using 0.1 for now cause idk what it should be
+#p_blur = sqrt(P)
+
+bars = (total_pixels / height) / 2
+middlex = width / 2
+middley = height / 2
+
+img_blurry <- isoblur(img,10)
+plot(img_blurry)
+
+blur1 = imsub(img_blurry, x >= max_grad, x< bars)
+plot(blur1)
+
+blur2 = imsub(img_blurry, y >= max_grad2, y< bars, x>= middlex - middley, x < middley)
+plot(blur2)
+
+
+blur1_mag = cimg2magick(blur1)
+blur2_mag = cimg2magick(blur2)
+img_mag = cimg2magick(img)
+
+blur1_mag2 = image_negate(image_convolve(blur1_mag, 'Sobel')) 
+plot(blur1_mag2)
+
+blur2_mag2 = image_negate(image_convolve(blur2_mag, 'Sobel')) 
+plot(blur2_mag2)
+
+blur1_rotate = image_rotate(image_background(blur1_mag2, "none"), 0)
+blur2_rotate = image_rotate(image_background(blur2_mag2, "none"), 0)
+
+plot(blur1_rotate)
+plot(blur2_rotate)
+
+blur1_offset = paste("+", middlex,"+0")
+blur2_offset = paste("+", middlex/2, "+", middley)
+
+
+new_img = image_composite(img_mag, blur1_rotate, offset = blur1_offset)
+new_img2 = image_composite(new_img, blur2_rotate, offset = blur2_offset)
+plot(new_img2)
+
